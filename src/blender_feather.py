@@ -1,7 +1,7 @@
 import os
 import subprocess
 
-# --- КОНФИГУРАЦИЯ: Добавьте свои версии Blender ---
+# Configuration: Add your Blender versions
 BLENDER_VERSIONS = {
     "3.6": r"E:\blender launcher\stable\blender-3.6.22-lts.30b431ea75f7\blender.exe",
     "4.5": r"E:\blender launcher\stable\blender-4.5.5-lts.836beaaf597a\blender.exe",
@@ -9,9 +9,8 @@ BLENDER_VERSIONS = {
 }
 
 def parse_filepath(raw_input):
-    """Очищает путь от PowerShell-артефактов и кавычек."""
+    """Removes PowerShell artifacts and quotes from path."""
     path = raw_input.strip()
-    path = path.strip()
     if (path.startswith('"') and path.endswith('"')) or \
        (path.startswith("'") and path.endswith("'")):
         path = path[1:-1]
@@ -19,11 +18,10 @@ def parse_filepath(raw_input):
         path = path[1:]
     elif path.endswith(('"', "'")):
         path = path[:-1]
-    
     return path.strip()
 
 def get_blend_version(filepath, blender_exec):
-    """Определяет версию .blend файла."""
+    """Detects .blend file version."""
     script = 'import bpy; print(f"V:{bpy.data.version[0]}.{bpy.data.version[1]}")'
     temp_file = "temp_version.py"
     
@@ -38,29 +36,29 @@ def get_blend_version(filepath, blender_exec):
         for line in result.stdout.splitlines():
             if "V:" in line:
                 return line.split("V:")[1].strip()
-        return "Неизвестно"
+        return "Unknown"
     except Exception as e:
-        return f"Ошибка: {e}"
+        return f"Error: {e}"
     finally:
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
 def choose_blender_version():
-    """Позволяет пользователю выбрать версию Blender."""
+    """User selects Blender version."""
     versions = sorted(BLENDER_VERSIONS.keys())
-    print("\nДоступные версии Blender:")
+    print("\nAvailable Blender versions:")
     for i, ver in enumerate(versions, 1):
         print(f"{i}. Blender {ver}")
     
     while True:
-        choice = input(f"\nВыберите версию (1-{len(versions)}): ").strip()
+        choice = input(f"\nSelect version (1-{len(versions)}): ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(versions):
             selected = versions[int(choice) - 1]
             return BLENDER_VERSIONS[selected]
-        print("Неверный выбор, попробуйте снова.")
+        print("Invalid choice, try again.")
 
 def generate_script(level, filepath, compress):
-    """Генерирует Python-скрипт для Blender."""
+    """Generates Python script for Blender."""
     safe_path = filepath.replace("\\", "/")
     
     return f"""
@@ -100,10 +98,9 @@ if level == 3:
         d_to.scenes = d_from.scenes
         d_to.objects = d_from.objects
     
-    # Создаём словарь для отслеживания родительских коллекций
+    # Track parent collections
     collection_hierarchy = {{}}
     for col in d_to.collections:
-        # Проверяем, является ли коллекция дочерней для другой коллекции
         is_child = False
         for other_col in d_to.collections:
             if col != other_col and col.name in [c.name for c in other_col.children]:
@@ -111,11 +108,11 @@ if level == 3:
                 collection_hierarchy[col.name] = other_col.name
                 break
         
-        # Линкуем только коллекции верхнего уровня (не вложенные)
+        # Link only top-level collections
         if not is_child and col.name not in bpy.context.scene.collection.children:
             bpy.context.scene.collection.children.link(col)
     
-    # Линкуем объекты, которые не принадлежат ни одной коллекции
+    # Link objects not in any collection
     for obj in d_to.objects:
         obj_in_collection = False
         for col in d_to.collections:
@@ -136,15 +133,13 @@ print(f"Saved: {{new_path}}")
 """
 
 def process_file(filepath, level, compress, blender_exec):
-    """Обрабатывает .blend файл."""
+    """Processes .blend file."""
     temp_script = "temp_process.py"
     
     with open(temp_script, "w", encoding="utf-8") as f:
         f.write(generate_script(level, filepath, compress))
     
-    print(f"\n🚀 Обработка (Уровень {level})...")
-    if level == 3:
-        print("ℹ️ Уровень 3: пересоздание файла (может занять время)")
+    print(f"\nProcessing (Level {level})...")
     
     try:
         result = subprocess.run(
@@ -153,15 +148,15 @@ def process_file(filepath, level, compress, blender_exec):
         )
         
         if result.returncode == 0:
-            print("\n✅ Готово!")
+            print("\nComplete.")
             for line in result.stdout.splitlines():
                 if "Saved:" in line:
                     print(line)
         else:
-            print("\n❌ Ошибка:")
+            print("\nError:")
             print(result.stderr[-500:] if len(result.stderr) > 500 else result.stderr)
     except Exception as e:
-        print(f"\n❌ Ошибка: {e}")
+        print(f"\nError: {e}")
     finally:
         if os.path.exists(temp_script):
             os.remove(temp_script)
@@ -170,43 +165,38 @@ def process_file(filepath, level, compress, blender_exec):
             os.remove(temp_blend)
 
 def main():
-    print("=== Blender Feather #14 ===\n")
+    print("=== Blender Feather #15 ===\n")
     
-    # Получаем путь к файлу
-    filepath = parse_filepath(input("Перетащите .blend файл: "))
+    filepath = parse_filepath(input("Drag .blend file: "))
     
     if not os.path.exists(filepath):
-        print(f"❌ Файл не найден: {filepath}")
+        print(f"File not found: {filepath}")
         return
     if not filepath.lower().endswith('.blend'):
-        print("❌ Это не .blend файл")
+        print("Not a .blend file")
         return
     
-    # Определяем версию файла
-    print("\n🔍 Определение версии файла...")
+    print("\nDetecting file version...")
     version = get_blend_version(filepath, BLENDER_VERSIONS[max(BLENDER_VERSIONS.keys())])
-    print(f"📌 Файл сохранён в Blender {version}")
+    print(f"File saved in Blender {version}")
     
-    # Выбираем версию Blender
     blender_exec = choose_blender_version()
     
-    # Выбор уровня
-    print("\nУровни оптимизации:")
-    print("1. Очистка неиспользуемых данных")
-    print("2. Уровень 1 + Удаление кистей, палитр, line styles")
-    print("3. Уровень 2 + Удаление fake users + Пересоздание через Append")
+    print("\nLightweighting levels:")
+    print("1. Purge unused data")
+    print("2. Level 1 + Remove brushes, palettes, line styles")
+    print("3. Level 2 + Remove fake users + Rebuild via Append")
     
-    choice = input("\nУровень (1-3): ").strip()
+    choice = input("\nLevel (1-3): ").strip()
     if choice not in ['1', '2', '3']:
-        print("Неверный выбор.")
+        print("Invalid choice.")
         return
     
-    # Сжатие
-    compress = input("\nСжать файл? (y/n): ").strip().lower() in ['y', 'yes', 'д', 'да']
-    print(f"🗜️ Сжатие: {'Вкл' if compress else 'Выкл'}")
+    compress = input("\nCompress file? (y/n): ").strip().lower() in ['y', 'yes']
+    print(f"Compression: {'On' if compress else 'Off'}")
     
     process_file(filepath, int(choice), compress, blender_exec)
 
 if __name__ == "__main__":
     main()
-    input("\nEnter для выхода...")
+    input("\nPress Enter to exit...")

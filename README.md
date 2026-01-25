@@ -5,9 +5,9 @@
 **Blender Feather** is an experimental Python script designed to reduce the size of `.blend` files. It automates the process of removing unused data and can optionally rebuild the file structure to achieve maximum lightweighting.
 
 > [!WARNING]
-> This is an **experimental** tool, it is **not** actively developed and it will **not** be polished or made user-friendly.
-> It runs **without** a GUI and has no safety checks.
-> Large parts of the code were written with the help of **AI**.
+> This is an **experimental** tool, it is **not** actively developed and it will **not** be polished or made user-friendly.  
+> It runs **without** a GUI and has no safety checks.  
+> Large parts of the code were written with the help of **AI**.  
 > The goal was exploration, not production-quality software.
 
 ---

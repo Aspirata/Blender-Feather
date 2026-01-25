@@ -31,6 +31,8 @@ def get_blend_version(filepath, blender_exec):
             if "V:" in line:
                 return line.split("V:")[1].strip()
         return "Unknown"
+    except subprocess.TimeoutExpired:
+        return "Timeout, try later maybe"
     except Exception as e:
         return f"Error: {e}"
     finally:
@@ -52,7 +54,7 @@ def choose_blender():
         print("Invalid choice")
 
 
-def process_file(filepath, level, compress, blender_exec):
+def process_file(filepath, level, compress, delete_worlds, exp_append, blender_exec):
     """Processes .blend file through Blender"""
     temp = "temp_process.py"
     
@@ -68,6 +70,8 @@ def process_file(filepath, level, compress, blender_exec):
         .replace("{{LEVEL}}", str(level))
         .replace("{{FILEPATH}}", filepath.replace("\\", "/"))
         .replace("{{COMPRESS}}", str(compress))
+        .replace("{{DELETE_WORLDS}}", str(delete_worlds))
+        .replace("{{EXP_APPEND}}", str(exp_append))
     )
 
     with open(temp, "w", encoding="utf-8") as f:
@@ -109,7 +113,7 @@ def process_file(filepath, level, compress, blender_exec):
 
 
 def main():
-    print("=== Blender Feather #18 ===\n")
+    print("=== Blender Feather #19 ===\n")
     
     filepath = parse_filepath(input("Drag .blend file: "))
     
@@ -137,9 +141,15 @@ def main():
     while choice not in ['1', '2', '3']:
         choice = input("Level (1-3): ").strip()
     
-    compress = input("\nCompress file? (y/n): ").strip().lower() in ['y', 'yes']
+    delete_worlds = input("\nDelete world materials? (y/n): ").strip().lower() in ['y', 'yes']
+
+    exp_append = False
+    if choice == '3':
+        exp_append = input("Enable experimental Scene Collection object append? (y/n): ").strip().lower() in ['y', 'yes']
+
+    compress = input("Compress file? (y/n): ").strip().lower() in ['y', 'yes']
     
-    process_file(filepath, int(choice), compress, blender_exec)
+    process_file(filepath, int(choice), compress, delete_worlds, exp_append, blender_exec)
 
 if __name__ == "__main__":
     main()

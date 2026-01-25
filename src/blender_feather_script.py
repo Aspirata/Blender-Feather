@@ -4,6 +4,8 @@ import bpy, os
 LEVEL = {{LEVEL}}
 FILEPATH = r"{{FILEPATH}}"
 COMPRESS = {{COMPRESS}}
+DELETE_WORLDS = {{DELETE_WORLDS}}
+EXP_APPEND = {{EXP_APPEND}}
 
 
 def purge_orphans(n=5):
@@ -22,6 +24,12 @@ def delete_extras():
         bpy.data.linestyles.remove(ls)
 
 
+def delete_all_worlds():
+    """Removes all world materials"""
+    for w in list(bpy.data.worlds):
+        bpy.data.worlds.remove(w)
+
+
 def remove_fake_users():
     """Disables fake user for all data blocks"""
     collections = [
@@ -35,6 +43,10 @@ def remove_fake_users():
             if item.use_fake_user:
                 item.use_fake_user = False
 
+
+# Logic Flow
+if DELETE_WORLDS:
+    delete_all_worlds()
 
 purge_orphans()
 
@@ -56,7 +68,8 @@ if LEVEL == 3:
     with bpy.data.libraries.load(temp) as (d_from, d_to):
         d_to.collections = d_from.collections
         d_to.scenes = d_from.scenes
-        d_to.objects = d_from.objects
+        if EXP_APPEND:
+            d_to.objects = d_from.objects
     
     # Restore collection hierarchy
     for col in d_to.collections:
@@ -74,19 +87,20 @@ if LEVEL == 3:
             except RuntimeError:
                 pass  # Already linked
     
-    # Link objects that aren't in any collection
-    for obj in d_to.objects:
-        in_collection = False
-        for col in d_to.collections:
-            if obj.name in [o.name for o in col.objects]:
-                in_collection = True
-                break
-        
-        if not in_collection and obj.name not in bpy.context.scene.collection.objects:
-            try:
-                bpy.context.scene.collection.objects.link(obj)
-            except RuntimeError:
-                pass
+    # Link objects that aren't in any collection (only if experimental append is on)
+    if EXP_APPEND:
+        for obj in d_to.objects:
+            in_collection = False
+            for col in d_to.collections:
+                if obj.name in [o.name for o in col.objects]:
+                    in_collection = True
+                    break
+            
+            if not in_collection and obj.name not in bpy.context.scene.collection.objects:
+                try:
+                    bpy.context.scene.collection.objects.link(obj)
+                except RuntimeError:
+                    pass
 
 # Generate new filename
 name, ext = os.path.splitext(os.path.basename(FILEPATH))

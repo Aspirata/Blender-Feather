@@ -1,70 +1,38 @@
 # Blender Feather 🪶
 
-**Blender Feather** is a small experimental Python script for making `.blend` files lighter by removing unused data and optionally recreating the file structure.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+**Blender Feather** is an experimental Python script designed to reduce the size of `.blend` files. It automates the process of removing unused data and can optionally rebuild the file structure to achieve maximum lightweighting.
 
 > [!WARNING]
-> This is **not** a finished product and never will be.  
-> It has no safety checks, no GUI, and no protection from incorrect usage.  
-> Use it only if you understand what you are doing.
+> This is an **experimental** tool, it is **not** actively developed and it will **not** be polished or made user-friendly.
+> It runs **without** a GUI and has no safety checks.
+> Large parts of the code were written with the help of **AI**.
+> The goal was exploration, not production-quality software.
 
 ---
 
-## Project status
+## Capabilities
 
-- This project is an **experiment**
-- It is **not actively developed**
-- It will **not** be polished or made user-friendly
-- Large parts of the code were written with the help of **AI**
-- The goal was exploration, not production-quality software
+The script processes files in the background using your installed Blender version. It offers three levels of lightweighting:
 
----
-
-## What it does
-
-- Runs Blender in background mode
-- Performs file **lightweighting** using a selected level
-- Saves the result as {ORIGINAL_FILE_NAME}_L{LIGHTWEIGHTING_LEVEL}.blend
+* **Level 1 (Safe):** Purges orphan data.
+* **Level 2 (Moderate):** Level 1 + removes unused brushes, palettes, and line styles.
+* **Level 3 (Aggressive):** Recreates the file by appending collections and objects into a fresh `.blend` file. This is the most effective but destructive method.
 
 ---
 
-## What it does NOT do
+## How to Use
 
-- No geometry optimization
-- No texture or image compression
-- No artistic or scene analysis
-- No guarantees of correctness or safety
+1.  Ensure you have **Python 3.10+** and **Blender** installed.
+2.  Open the `blender_feather.py` file in a code (text) editor and update the `BLENDER_VERSIONS` configuration list with the paths to your Blender executables.
+3.  Run the `blender_feather.py`
+4.  Drag and drop your target `.blend` file into the window and follow the prompts.
 
----
-
-## Lightweighting levels
-
-- **Level 1** — Orphan purge only   
-(safe)
-- **Level 2** — Level 1 + removal of brushes, palettes and line styles  
-(safe in most cases)
-- **Level 3** — Level 2 + file recreation via collections append  
-(most effective, most destructive)
+The processed file will be saved as `{filename}_L{level}.blend`.
 
 ---
 
-## Requirements
+## License
 
-### Blender
-- Any version that supports background execution
-- Recommended:
-- 3.6 LTS
-- 4.5 LTS
-- 5.0
-
-### Python
-- Tested on **Python 3.12**
-- Other versions may work but are untested
-
----
-
-## Setup
-
-1. Install Python
-2. Manually set paths to your Blender executables in `BLENDER_VERSIONS`  
- (you can add as many versions as you want)
-3. Run `blender_feather.py`
+This project is distributed under the **MIT License**

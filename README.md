@@ -1,6 +1,6 @@
 # Blender Feather 🪶
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 **Blender Feather** is an experimental Python script designed to reduce the size of `.blend` files. It automates the process of removing unused data and can optionally rebuild the file structure to achieve maximum lightweighting.
 
@@ -30,9 +30,3 @@ The script processes files in the background using your installed Blender versio
 4.  Drag and drop your target `.blend` file into the window and follow the prompts.
 
 The processed file will be saved as `{filename}_L{level}.blend`.
-
----
-
-## License
-
-This project is distributed under the **MIT License**

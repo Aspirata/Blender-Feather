@@ -25,7 +25,7 @@ def get_blend_version(filepath, blender_exec):
     try:
         result = subprocess.run(
             [blender_exec, "-b", filepath, "-P", temp],
-            capture_output=True, text=True, timeout=30
+            capture_output=True, text=True, timeout=60
         )
         for line in result.stdout.splitlines():
             if "V:" in line:
@@ -109,7 +109,7 @@ def process_file(filepath, level, compress, blender_exec):
 
 
 def main():
-    print("=== Blender Feather #17 ===\n")
+    print("=== Blender Feather #18 ===\n")
     
     filepath = parse_filepath(input("Drag .blend file: "))
     

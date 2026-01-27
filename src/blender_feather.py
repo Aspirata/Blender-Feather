@@ -1,4 +1,4 @@
-import os, subprocess
+import os, subprocess, re
 from pathlib import Path
 
 # Add your Blender versions here
@@ -15,29 +15,47 @@ def parse_filepath(raw):
 
 
 def get_blend_version(filepath, blender_exec):
-    """Detects .blend file version"""
-    script = 'import bpy; print(f"V:{bpy.data.version[0]}.{bpy.data.version[1]}")'
-    temp = "temp_version.py"
-    
-    with open(temp, "w", encoding="utf-8") as f:
-        f.write(script)
-    
+    """Dynamically get Blender version using binary header inspection or fallback to latest Blender"""
     try:
-        result = subprocess.run(
-            [blender_exec, "-b", filepath, "-P", temp],
-            capture_output=True, text=True, timeout=60
-        )
-        for line in result.stdout.splitlines():
-            if "V:" in line:
-                return line.split("V:")[1].strip()
-        return "Unknown"
+        with open(filepath, 'rb') as f:
+            chunk = f.read(24)
+            
+            header_text = chunk[7:].decode('ascii', errors='ignore')
+            
+            match = re.search(r'(\d+)', header_text)
+            
+            if match:
+                ver_str = match.group(1)
+                
+                if len(ver_str) >= 3:
+                    major = ver_str[:-2]
+                    minor = int(ver_str[-2:])
+                    return f"{major}.{minor}"
+                return ver_str
+            
+            script = 'import bpy; print(f"V:{bpy.data.version[0]}.{bpy.data.version[1]}")'
+            temp = "temp_version.py"
+
+            with open(temp, "w", encoding="utf-8") as f:
+                f.write(script)
+            
+            result = subprocess.run(
+                [blender_exec, "-b", filepath, "-P", temp],
+                capture_output=True, text=True, timeout=60
+            )
+            for line in result.stdout.splitlines():
+                if "V:" in line:
+                    return line.split("V:")[1].strip()
+            
+            if os.path.exists(temp):
+                os.remove(temp)
+
+            return "Unknown"
+                
     except subprocess.TimeoutExpired:
         return "Timeout, try later maybe"
     except Exception as e:
         return f"Error: {e}"
-    finally:
-        if os.path.exists(temp):
-            os.remove(temp)
 
 
 def choose_blender():
@@ -113,7 +131,7 @@ def process_file(filepath, level, compress, delete_worlds, exp_append, blender_e
 
 
 def main():
-    print("=== Blender Feather #20 ===")
+    print("=== Blender Feather #21 ===")
     
     while True:
         filepath = parse_filepath(input("\nDrag .blend file: "))

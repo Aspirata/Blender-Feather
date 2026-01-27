@@ -113,44 +113,46 @@ def process_file(filepath, level, compress, delete_worlds, exp_append, blender_e
 
 
 def main():
-    print("=== Blender Feather #19 ===\n")
+    print("=== Blender Feather #20 ===")
     
-    filepath = parse_filepath(input("Drag .blend file: "))
-    
-    if not os.path.exists(filepath):
-        print(f"File not found: {filepath}")
-        return
-    if not filepath.lower().endswith('.blend'):
-        print("Not a .blend file")
-        return
-    
-    # Detect file version (using latest Blender)
-    print("\nDetecting file version...")
-    latest = BLENDER_VERSIONS[sorted(BLENDER_VERSIONS.keys())[-1]]
-    version = get_blend_version(filepath, latest)
-    print(f"File saved in Blender {version}")
-    
-    blender_exec = choose_blender()
-    
-    print("\nLightweighting levels:")
-    print("1. Purge (remove unused data)")
-    print("2. Level 1 + remove brushes, palettes, line styles")
-    print("3. Level 2 + remove fake users + rebuild via Append")
-    
-    choice = input("\nLevel (1-3): ").strip()
-    while choice not in ['1', '2', '3']:
-        choice = input("Level (1-3): ").strip()
-    
-    delete_worlds = input("\nDelete world materials? (y/n): ").strip().lower() in ['y', 'yes']
+    while True:
+        filepath = parse_filepath(input("\nDrag .blend file: "))
+        
+        if not os.path.exists(filepath):
+            print(f"File not found: {filepath}")
+            return
+        if not filepath.lower().endswith('.blend'):
+            print("Not a .blend file")
+            return
+        
+        # Detect file version (using latest Blender)
+        print("\nDetecting file version...")
+        latest = BLENDER_VERSIONS[sorted(BLENDER_VERSIONS.keys())[-1]]
+        version = get_blend_version(filepath, latest)
+        print(f"File saved in Blender {version}")
+        
+        blender_exec = choose_blender()
+        
+        print("\nLightweighting levels:")
+        print("1. Purge (remove unused data)")
+        print("2. Level 1 + remove brushes, palettes, line styles")
+        print("3. Level 2 + remove fake users + rebuild via Append")
+        
+        choice = input("\nLightweighting Level (1-3): ").strip()
+        while choice not in ['1', '2', '3']:
+            choice = input("Lightweighting Level (1-3): ").strip()
+        
+        delete_worlds = input("\nDelete world materials? (y/n): ").strip().lower() in ['y', 'yes', ""]
 
-    exp_append = False
-    if choice == '3':
-        exp_append = input("Enable experimental Scene Collection object append? (y/n): ").strip().lower() in ['y', 'yes']
+        exp_append = False
+        if choice == '3':
+            exp_append = input("Enable experimental Scene Collection object append? (y/n): ").strip().lower() in ['y', 'yes']
 
-    compress = input("Compress file? (y/n): ").strip().lower() in ['y', 'yes']
-    
-    process_file(filepath, int(choice), compress, delete_worlds, exp_append, blender_exec)
+        compress = input("Compress file? (y/n): ").strip().lower() in ['y', 'yes']
+        
+        process_file(filepath, int(choice), compress, delete_worlds, exp_append, blender_exec)
+
+        print("\n=== Done ===")
 
 if __name__ == "__main__":
     main()
-    input("\nPress Enter to exit...")

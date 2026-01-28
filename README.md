@@ -5,8 +5,10 @@
 **Blender Feather** is an experimental Python script designed to reduce the size of `.blend` files. It automates the process of removing unused data and can optionally rebuild the file structure to achieve maximum lightweighting.
 
 > [!WARNING]
-> This is an **experimental** tool. It runs **without** a GUI and has no safety checks.  
-> Always keep a backup of your original file.
+> This is an experimental tool, it is not actively developed and it will not be polished or made user-friendly.
+> It runs without a GUI and has no safety checks.
+> Large parts of the code were written with the help of AI.
+> The goal was exploration, not production-quality software.
 
 ---
 
@@ -16,8 +18,8 @@ The script processes files in the background using your installed Blender versio
 
 ### Lightweighting Levels
 * **Level 1 (Safe):** Purges orphan data (runs recursively).
-* **Level 2 (Moderate):** Level 1 + removes unused brushes, palettes, and line styles.
-* **Level 3 (Aggressive):** Recreates the file by appending collections and objects into a fresh `.blend` file. This is the most effective but destructive method.
+* **Level 2 (Moderate):** Level 1 + removes brushes, palettes, and line styles.
+* **Level 3 (Aggressive):** Level 2 + disables all false users, recreates the file by appending collections and objects into a fresh `.blend` file. This is the most effective but destructive method.
 
 ### Additional Options
 * **Delete World Materials:** Removes World material

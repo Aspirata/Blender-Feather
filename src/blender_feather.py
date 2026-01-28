@@ -4,6 +4,9 @@ from pathlib import Path
 # Add your Blender versions here
 BLENDER_VERSIONS = {
     "3.6": r"E:\blender launcher\stable\blender-3.6.22-lts.30b431ea75f7\blender.exe",
+    "4.0": r"E:\blender launcher\stable\blender-4.0.2-stable.9be62e85b727\blender.exe",
+    "4.1": r"E:\blender launcher\stable\blender-4.1.1-stable.e1743a0317bc\blender.exe",
+    "4.2": r"E:\blender launcher\stable\blender-4.2.16-lts.39502cae951c\blender.exe",
     "4.5": r"E:\blender launcher\stable\blender-4.5.5-lts.836beaaf597a\blender.exe",
     "5.0": r"E:\blender launcher\stable\blender-5.0.1-stable.a3db93c5b259\blender.exe",
 }
@@ -31,7 +34,6 @@ def get_blend_version(filepath, blender_exec):
                     major = ver_str[:-2]
                     minor = int(ver_str[-2:])
                     return f"{major}.{minor}"
-                return ver_str
             
             script = 'import bpy; print(f"V:{bpy.data.version[0]}.{bpy.data.version[1]}")'
             temp = "temp_version.py"
@@ -60,15 +62,15 @@ def get_blend_version(filepath, blender_exec):
 
 def choose_blender():
     """Select Blender version"""
-    versions = sorted(BLENDER_VERSIONS.keys())
+    versions = [(ver, path) for ver, path in BLENDER_VERSIONS.items() if os.path.exists(path)]
     print("\nAvailable versions:")
-    for i, ver in enumerate(versions, 1):
+    for i, (ver, _) in enumerate(versions, 1):
         print(f"{i}. Blender {ver}")
     
     while True:
         choice = input(f"\nSelect version (1-{len(versions)}): ").strip()
         if choice.isdigit() and 1 <= int(choice) <= len(versions):
-            return BLENDER_VERSIONS[versions[int(choice) - 1]]
+            return versions[int(choice) - 1][1]
         print("Invalid choice")
 
 
@@ -131,17 +133,17 @@ def process_file(filepath, level, compress, delete_worlds, exp_append, blender_e
 
 
 def main():
-    print("=== Blender Feather #21 ===")
+    print("=== Blender Feather #23 ===")
     
     while True:
         filepath = parse_filepath(input("\nDrag .blend file: "))
         
         if not os.path.exists(filepath):
             print(f"File not found: {filepath}")
-            return
+            continue
         if not filepath.lower().endswith('.blend'):
             print("Not a .blend file")
-            return
+            continue
         
         # Detect file version (using latest Blender)
         print("\nDetecting file version...")

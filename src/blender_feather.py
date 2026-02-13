@@ -95,7 +95,7 @@ def choose_blender(file_version):
     for i, (ver, _) in enumerate(versions, 1):
         print(f"{i}. Blender {ver}")
 
-    default_blender_version = next((ver for ver, path in versions if ver == file_version), None)
+    default_blender_version = next((i for i, (ver, _) in enumerate(versions, 1) if ver == file_version), None)
     return versions[int(get_user_input("\nChoose Blender version", [i for i in range(1, len(versions) + 1)], default_blender_version)) - 1][1]
 
 
@@ -157,7 +157,7 @@ def process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, 
 
 
 def main():
-    print("=== Blender Feather #24 ===")
+    print("=== Blender Feather #26 ===")
 
     delete_temp_files()
 

@@ -63,13 +63,18 @@ if LEVEL == 3:
     
     # Reset Blender to empty state
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    
+
     # Append everything back (automatically skips data without users)
     with bpy.data.libraries.load(temp) as (d_from, d_to):
+        original_scenes = set(d_from.scenes) if hasattr(d_from, 'scenes') else set()
         d_to.collections = d_from.collections
         d_to.scenes = d_from.scenes
         if EXP_APPEND:
             d_to.objects = d_from.objects
+    
+    for scene in list(bpy.data.scenes):
+        if scene.name not in original_scenes:
+            bpy.data.scenes.remove(scene)
     
     # Restore collection hierarchy
     for col in d_to.collections:

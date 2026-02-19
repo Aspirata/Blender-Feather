@@ -30,7 +30,7 @@ def delete_temp_files():
             print(f"Could not delete {temp_script_path}: {traceback.format_exc()}")
 
 
-def get_user_input(prompt: str, valid_responses: list[str | int | float], default_value: None | bool | str | int | float = None):
+def get_user_input(prompt: str, valid_responses: list[str | int | float], default_value: None | bool | str | int | float = None) -> str:
     """Get user input with validation and default option"""
     valid_responses = [str(response) for response in valid_responses]
     prompt += f" (valid responses: {', '.join(valid_responses)})"
@@ -40,7 +40,7 @@ def get_user_input(prompt: str, valid_responses: list[str | int | float], defaul
 
     while True:
         response = input(f"{prompt}: ").strip().lower()
-        if response == "" and default_value:
+        if response == "" and default_value is not None:
             return default_value
         if response in valid_responses:
             return response
@@ -157,7 +157,7 @@ def process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, 
 
 
 def main():
-    print("=== Blender Feather #26 ===")
+    print("=== Blender Feather #27 ===")
 
     delete_temp_files()
 

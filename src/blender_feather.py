@@ -4,13 +4,14 @@ from pathlib import Path
 
 # Add your Blender versions here
 BLENDER_VERSIONS = {
-    "3.6": r"E:\blender launcher\stable\blender-3.6.23-lts.e467db79ca8c\blender.exe",
-    "4.0": r"E:\blender launcher\stable\blender-4.0.2-stable.9be62e85b727\blender.exe",
-    "4.1": r"E:\blender launcher\stable\blender-4.1.1-stable.e1743a0317bc\blender.exe",
-    "4.2": r"E:\blender launcher\stable\blender-4.2.17-lts.76b996a81c95\blender.exe",
-    "4.4": r"E:\blender launcher\stable\blender-4.4.3-stable.802179c51ccc\blender.exe",
-    "4.5": r"E:\blender launcher\stable\blender-4.5.6-lts.a78963ed6435\blender.exe",
-    "5.0": r"E:\blender launcher\stable\blender-5.0.1-stable.a3db93c5b259\blender.exe",
+    "3.6": r"S:\Programs\Blender Launcher\stable\blender-3.6.23-lts.e467db79ca8c\blender.exe",
+    "4.0": r"S:\Programs\Blender Launcher\stable\blender-4.0.2-stable.9be62e85b727\blender.exe",
+    "4.1": r"S:\Programs\Blender Launcher\stable\blender-4.1.1-stable.e1743a0317bc\blender.exe",
+    "4.2": r"S:\Programs\Blender Launcher\stable\blender-4.2.17-lts.76b996a81c95\blender.exe",
+    "4.3": r"S:\Programs\Blender Launcher\stable\blender-4.3.1-stable.9c8e5b2a0c7e\blender.exe",
+    "4.4": r"S:\Programs\Blender Launcher\stable\blender-4.4.3-stable.802179c51ccc\blender.exe",
+    "4.5": r"S:\Programs\Blender Launcher\stable\blender-4.5.6-lts.a78963ed6435\blender.exe",
+    "5.0": r"S:\Programs\Blender Launcher\stable\blender-5.0.1-stable.a3db93c5b259\blender.exe",
 }
 
 TEMP_DIR = tempfile.gettempdir()
@@ -30,7 +31,8 @@ def delete_temp_files():
             print(f"Could not delete {temp_script_path}: {traceback.format_exc()}")
 
 
-def get_user_input(prompt: str, valid_responses: list[str | int | float], default_value: None | bool | str | int | float = None) -> str:
+def get_user_input(prompt: str, valid_responses: list[str | int | float] = ["y", "yes", "n", "no"],
+                    default_value: None | bool | str | int | float = None) -> str:
     """Get user input with validation and default option"""
     valid_responses = [str(response) for response in valid_responses]
     prompt += f" (valid responses: {', '.join(valid_responses)})"
@@ -91,6 +93,10 @@ def get_blend_version(filepath, blender_exec):
 def choose_blender(file_version):
     """Select Blender version"""
     versions = [(ver, path) for ver, path in BLENDER_VERSIONS.items() if os.path.exists(path)]
+    if not versions:
+        print("No valid Blender executables found. Please check BLENDER_VERSIONS paths.")
+        exit(1)
+
     print("Available versions:")
     for i, (ver, _) in enumerate(versions, 1):
         print(f"{i}. Blender {ver}")
@@ -157,7 +163,7 @@ def process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, 
 
 
 def main():
-    print("=== Blender Feather #27 ===")
+    print("=== Blender Feather #28 ===")
 
     delete_temp_files()
 
@@ -186,16 +192,17 @@ def main():
         
         lightweighting_level: int = int(get_user_input("\nChoose Lightweighting Level", [1, 2, 3], 1))
         
-        do_delete_worlds: bool = get_user_input("\nDelete world materials ?", ["y", "yes", "n", "no"], "y") in ["y", "yes"]
+        do_delete_worlds: bool = get_user_input("\nDelete world materials ?", default_value="n") in ["y", "yes"]
 
+        do_experimental_append: bool = False
         if lightweighting_level == 3:
-            do_experimental_append: bool = get_user_input("\nEnable experimental Scene Collection object append ?", ["y", "yes", "n", "no"], "n") in ["y", "yes"]
+            do_experimental_append: bool = get_user_input("\nEnable experimental Scene Collection object append ?", default_value="n") in ["y", "yes"]
 
-        do_compress: bool = get_user_input("\nCompress file ?", ["y", "yes", "n", "no"], "n") in ["y", "yes"]
+        do_compress: bool = get_user_input("\nCompress file ?", default_value="y") in ["y", "yes"]
         
         print("\nProcessing file...")
         
-        process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, do_experimental_append or False, blender_executable_path)
+        process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, do_experimental_append, blender_executable_path)
 
         print("\n=== Done ===")
 

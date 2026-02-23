@@ -7,10 +7,10 @@ BLENDER_VERSIONS = {
     "3.6": r"S:\Programs\Blender Launcher\stable\blender-3.6.23-lts.e467db79ca8c\blender.exe",
     "4.0": r"S:\Programs\Blender Launcher\stable\blender-4.0.2-stable.9be62e85b727\blender.exe",
     "4.1": r"S:\Programs\Blender Launcher\stable\blender-4.1.1-stable.e1743a0317bc\blender.exe",
-    "4.2": r"S:\Programs\Blender Launcher\stable\blender-4.2.17-lts.76b996a81c95\blender.exe",
+    "4.2": r"S:\Programs\Blender Launcher\stable\blender-4.2.18-lts.d71e3422e438\blender.exe",
     "4.3": r"S:\Programs\Blender Launcher\stable\blender-4.3.1-stable.9c8e5b2a0c7e\blender.exe",
     "4.4": r"S:\Programs\Blender Launcher\stable\blender-4.4.3-stable.802179c51ccc\blender.exe",
-    "4.5": r"S:\Programs\Blender Launcher\stable\blender-4.5.6-lts.a78963ed6435\blender.exe",
+    "4.5": r"S:\Programs\Blender Launcher\stable\blender-4.5.7-lts.a9874eeece8d\blender.exe",
     "5.0": r"S:\Programs\Blender Launcher\stable\blender-5.0.1-stable.a3db93c5b259\blender.exe",
 }
 

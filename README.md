@@ -7,7 +7,6 @@
 > [!WARNING]
 > This is an experimental tool, it is not actively developed and it will not be polished or made user-friendly.  
 > It runs without a GUI and has no safety checks.  
-> Large parts of the code were written with the help of AI.  
 > The goal was exploration, not production-quality software.
 
 ---
@@ -31,7 +30,7 @@ The script processes files in the background using your installed Blender versio
 ## How to Use
 
 1.  Ensure you have **Python 3.10+** and **Blender** installed.
-2.  Open `blender_feather.py` and update `BLENDER_VERSIONS` with your paths.
+2.  Open `blender_feather.py` and update `BLENDER_EXECUTABLES_PATHS` with your paths.
 3.  Run `blender_feather.py`.
 4.  Drag and drop your target `.blend` file and follow the prompts.
 

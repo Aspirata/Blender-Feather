@@ -1,20 +1,8 @@
 import os, subprocess, re, atexit, tempfile, traceback
 from pathlib import Path
 
-
-# Add your Blender versions here
-BLENDER_VERSIONS = {
-    "3.6": r"S:\Programs\Blender Launcher\stable\blender-3.6.23-lts.e467db79ca8c\blender.exe",
-    "4.0": r"S:\Programs\Blender Launcher\stable\blender-4.0.2-stable.9be62e85b727\blender.exe",
-    "4.1": r"S:\Programs\Blender Launcher\stable\blender-4.1.1-stable.e1743a0317bc\blender.exe",
-    "4.2": r"S:\Programs\Blender Launcher\stable\blender-4.2.18-lts.d71e3422e438\blender.exe",
-    "4.3": r"S:\Programs\Blender Launcher\stable\blender-4.3.1-stable.9c8e5b2a0c7e\blender.exe",
-    "4.4": r"S:\Programs\Blender Launcher\stable\blender-4.4.3-stable.802179c51ccc\blender.exe",
-    "4.5": r"S:\Programs\Blender Launcher\stable\blender-4.5.7-lts.a9874eeece8d\blender.exe",
-    "5.0": r"S:\Programs\Blender Launcher\stable\blender-5.0.1-stable.a3db93c5b259\blender.exe",
-}
-
-TEMP_DIR = tempfile.gettempdir()
+BLENDER_EXECUTABLES_PATHS: list[str] = [r"S:\Programs\Blender Launcher"]
+TEMP_DIR: str = tempfile.gettempdir()
 
 def delete_temp_files():
     """Remove temporary files created during version detection and processing"""
@@ -34,8 +22,9 @@ def delete_temp_files():
 def get_user_input(prompt: str, valid_responses: list[str | int | float] = ["y", "yes", "n", "no"],
                     default_value: None | bool | str | int | float = None) -> str:
     """Get user input with validation and default option"""
-    valid_responses = [str(response) for response in valid_responses]
-    prompt += f" (valid responses: {', '.join(valid_responses)})"
+    if valid_responses:
+        valid_responses = [str(response) for response in valid_responses]
+        prompt += f" (valid responses: {', '.join(valid_responses)})"
 
     if default_value is not None:
         prompt += f" (default: {default_value})"
@@ -44,7 +33,7 @@ def get_user_input(prompt: str, valid_responses: list[str | int | float] = ["y",
         response = input(f"{prompt}: ").strip().lower()
         if response == "" and default_value is not None:
             return default_value
-        if response in valid_responses:
+        if (valid_responses and response in valid_responses) or not valid_responses:
             return response
         print(f"Invalid input. Please enter one of: {', '.join(valid_responses)}")
 
@@ -89,10 +78,38 @@ def get_blend_version(filepath, blender_exec):
     except Exception as e:
         return f"Error: {e}"
 
+def get_blender_executables() -> dict[str, str]:
+    """Detect valid blender executables paths from BLENDER_EXECUTABLES_PATHS"""
+    blender_versions = {}
+    version_pattern = re.compile(r'^\d+\.\d+')
 
-def choose_blender(file_version):
+    def walk(directory: str):
+        try:
+            entries = os.listdir(directory)
+        except PermissionError:
+            return
+
+        for entry in entries:
+            entry_path = os.path.join(directory, entry)
+            if not os.path.isdir(entry_path):
+                continue
+
+            if version_pattern.match(entry):
+                blender_exe = os.path.join(directory, "blender.exe")
+                if os.path.isfile(blender_exe):
+                    blender_versions[entry] = blender_exe
+            else:
+                walk(entry_path)
+
+    for path in BLENDER_EXECUTABLES_PATHS:
+        if os.path.exists(path):
+            walk(path)
+
+    return blender_versions
+
+def choose_blender(file_version, blender_versions):
     """Select Blender version"""
-    versions = [(ver, path) for ver, path in BLENDER_VERSIONS.items() if os.path.exists(path)]
+    versions = [(ver, path) for ver, path in blender_versions.items() if os.path.exists(path)]
     if not versions:
         print("No valid Blender executables found. Please check BLENDER_VERSIONS paths.")
         exit(1)
@@ -163,11 +180,26 @@ def process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, 
 
 
 def main():
-    print("=== Blender Feather #28 ===")
+    print("=== Blender Feather #30 ===")
 
     delete_temp_files()
 
     while True:
+        if any(path for path in BLENDER_EXECUTABLES_PATHS if not os.path.exists(path)):
+            print("\nInvalid Blender executables paths will be skipped. Please remove or fix them in BLENDER_EXECUTABLES_PATHS in the script:")
+            for path in BLENDER_EXECUTABLES_PATHS:
+                if not os.path.exists(path):
+                    print(f"  - {path}")
+
+        if not any(os.path.exists(path) for path in BLENDER_EXECUTABLES_PATHS):
+            print("\nNo valid Blender executables found. Please check BLENDER_EXECUTABLES_PATHS in the script.")
+            exit(1)
+
+        blender_versions: dict[str, str] = get_blender_executables()
+        if not blender_versions:
+            print("\nNo valid Blender executables found. Please check BLENDER_EXECUTABLES_PATHS in the script.")
+            exit(1)
+
         filepath = input("\nDrag .blend file: ").strip().strip('"').strip("'")
         
         if not os.path.exists(filepath):
@@ -179,11 +211,11 @@ def main():
         
         # Detect file version (using latest Blender)
         print("\nDetecting file version...")
-        latest_blender_version = BLENDER_VERSIONS[sorted(BLENDER_VERSIONS.keys())[-1]]
+        latest_blender_version = blender_versions[sorted(blender_versions.keys())[-1]]
         file_version = get_blend_version(filepath, latest_blender_version)
         print(f"\nFile saved in Blender {file_version}")
         
-        blender_executable_path: str = choose_blender(file_version)
+        blender_executable_path: str = choose_blender(file_version, blender_versions)
         
         print("\nLightweighting levels:")
         print("1. Purge (remove unused data)")

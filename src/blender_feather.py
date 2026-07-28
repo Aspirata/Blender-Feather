@@ -1,4 +1,11 @@
-import os, subprocess, re, atexit, tempfile, traceback
+import atexit
+import os
+import re
+import shlex
+import subprocess
+import sys
+import tempfile
+import traceback
 from pathlib import Path
 
 BLENDER_EXECUTABLES_PATHS: list[str] = [r"S:\Programs\Blender Launcher"]
@@ -15,7 +22,7 @@ def delete_temp_files():
             os.remove(temp_script_path)
         except FileNotFoundError:
             pass
-        except Exception:
+        except OSError:
             print(f"Could not delete {temp_script_path}: {traceback.format_exc()}")
 
 
@@ -75,8 +82,8 @@ def get_blend_version(filepath, blender_exec):
 
     except subprocess.TimeoutExpired:
         return "Timeout, try later maybe"
-    except Exception as e:
-        return f"Error: {e}"
+    except Exception:
+        return f"Error: {traceback.format_exc()}"
 
 def get_blender_executables() -> dict[str, str]:
     """Detect valid blender executables paths from BLENDER_EXECUTABLES_PATHS"""
@@ -107,19 +114,24 @@ def get_blender_executables() -> dict[str, str]:
 
     return blender_versions
 
-def choose_blender(file_version, blender_versions):
+def choose_blender(file_version, blender_versions, is_batching_enabled):
     """Select Blender version"""
     versions = [(ver, path) for ver, path in blender_versions.items() if os.path.exists(path)]
     if not versions:
         print("No valid Blender executables found. Please check BLENDER_VERSIONS paths.")
-        exit(1)
+        sys.exit(1)
+    
+    default_blender_version = next((i for i, (ver, _) in enumerate(versions, 1) if ver == file_version), None)
+
+    if is_batching_enabled and default_blender_version is not None:
+        return versions[int(default_blender_version) - 1][1]
 
     print("Available versions:")
     for i, (ver, _) in enumerate(versions, 1):
         print(f"{i}. Blender {ver}")
 
-    default_blender_version = next((i for i, (ver, _) in enumerate(versions, 1) if ver == file_version), None)
-    return versions[int(get_user_input("\nChoose Blender version", [i for i in range(1, len(versions) + 1)], default_blender_version)) - 1][1]
+    chosen_blender_version = get_user_input("\nChoose Blender version", [i for i in range(1, len(versions) + 1)], default_blender_version)
+    return versions[int(chosen_blender_version) - 1][1]
 
 
 def process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, do_experimental_append, blender_executable_path):
@@ -162,8 +174,8 @@ def process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, 
             print(result.stderr[-1000:])
             print(result.stdout[-500:])
 
-    except Exception as e:
-        print(f"\nError: {e}")
+    except Exception:
+        print(f"\nError: {traceback.format_exc()}")
     
     finally:
         # Cleanup temp files
@@ -180,7 +192,7 @@ def process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, 
 
 
 def main():
-    print("=== Blender Feather #30 ===")
+    print("=== Blender Feather #35 ===")
 
     delete_temp_files()
 
@@ -193,50 +205,72 @@ def main():
 
         if not any(os.path.exists(path) for path in BLENDER_EXECUTABLES_PATHS):
             print("\nNo valid Blender executables found. Please check BLENDER_EXECUTABLES_PATHS in the script.")
-            exit(1)
+            sys.exit(1)
 
         blender_versions: dict[str, str] = get_blender_executables()
         if not blender_versions:
             print("\nNo valid Blender executables found. Please check BLENDER_EXECUTABLES_PATHS in the script.")
-            exit(1)
+            sys.exit(1)
 
-        filepath = input("\nDrag .blend file: ").strip().strip('"').strip("'")
+        filepaths: list[str] = [p.strip('"\'') for p in shlex.split(input("\nDrag .blend file(s): "), posix=False)]
         
-        if not os.path.exists(filepath):
-            print(f"File not found: {filepath}")
-            continue
-        if not filepath.lower().endswith('.blend'):
-            print("Not a .blend file")
-            continue
+        is_batching_enabled: bool = len(filepaths) > 1
+        batch_lightweighting_level: int | None = None
+        batch_do_delete_worlds: bool | None = None
+        batch_do_experimental_append: bool | None = None
+        batch_do_compress: bool | None = None
+        for filepath in filepaths:
+            if not os.path.exists(filepath):
+                print(f"File not found: {filepath}")
+                continue
+            if not filepath.lower().endswith('.blend'):
+                print("Not a .blend file")
+                continue
         
-        # Detect file version (using latest Blender)
-        print("\nDetecting file version...")
-        latest_blender_version = blender_versions[sorted(blender_versions.keys())[-1]]
-        file_version = get_blend_version(filepath, latest_blender_version)
-        print(f"\nFile saved in Blender {file_version}")
-        
-        blender_executable_path: str = choose_blender(file_version, blender_versions)
-        
-        print("\nLightweighting levels:")
-        print("1. Purge (remove unused data)")
-        print("2. Level 1 + remove brushes, palettes, line styles")
-        print("3. Level 2 + remove fake users + rebuild via Append")
-        
-        lightweighting_level: int = int(get_user_input("\nChoose Lightweighting Level", [1, 2, 3], 1))
-        
-        do_delete_worlds: bool = get_user_input("\nDelete world materials ?", default_value="n") in ["y", "yes"]
+            # Detect file version (using latest Blender)
+            print("\nDetecting file version...")
+            latest_blender_version = blender_versions[sorted(blender_versions.keys())[-1]]
+            file_version = get_blend_version(filepath, latest_blender_version)
+            print(f"\nFile saved in Blender {file_version}")
+            
+            blender_executable_path: str = choose_blender(file_version, blender_versions, is_batching_enabled)
+            
+            if batch_lightweighting_level is None:
+                print("\nLightweighting levels:")
+                print("1. Purge (remove unused data)")
+                print("2. Level 1 + remove brushes, palettes, line styles")
+                print("3. Level 2 + remove fake users + rebuild via Append")
+                lightweighting_level: int = int(get_user_input("\nChoose Lightweighting Level", [1, 2, 3], 1))
+                batch_lightweighting_level = lightweighting_level
+            else:
+                lightweighting_level: int = batch_lightweighting_level
 
-        do_experimental_append: bool = False
-        if lightweighting_level == 3:
-            do_experimental_append: bool = get_user_input("\nEnable experimental Scene Collection object append ?", default_value="n") in ["y", "yes"]
+            if batch_do_delete_worlds is None:
+                do_delete_worlds: bool = get_user_input("\nDelete world materials ?", default_value="n") in ["y", "yes"]
+                batch_do_delete_worlds = do_delete_worlds
+            else:
+                do_delete_worlds: bool = batch_do_delete_worlds
 
-        do_compress: bool = get_user_input("\nCompress file ?", default_value="y") in ["y", "yes"]
-        
-        print("\nProcessing file...")
-        
-        process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, do_experimental_append, blender_executable_path)
+            if batch_do_experimental_append is None:
+                do_experimental_append: bool = False
+            else:
+                do_experimental_append: bool = batch_do_experimental_append
 
-        print("\n=== Done ===")
+            if lightweighting_level == 3:
+                do_experimental_append: bool = get_user_input("\nEnable experimental Scene Collection object append ?", default_value="n") in ["y", "yes"]
+                batch_do_experimental_append = do_experimental_append
+
+            if batch_do_compress is None:
+                do_compress: bool = get_user_input("\nCompress file ?", default_value="y") in ["y", "yes"]
+                batch_do_compress = do_compress
+            else:
+                do_compress: bool = batch_do_compress
+
+            print("\nProcessing file...")
+            
+            process_file(filepath, lightweighting_level, do_compress, do_delete_worlds, do_experimental_append, blender_executable_path)
+
+            print("\n=== Done ===")
 
 
 atexit.register(delete_temp_files)
